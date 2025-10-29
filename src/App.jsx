@@ -13,7 +13,6 @@ export default function Dashboard() {
   const animationTimeRef = useRef(0)
   const animationFrameRef = useRef(null)
 
-  // Handle file upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
     setError("")
@@ -30,7 +29,6 @@ export default function Dashboard() {
       return
     }
 
-    // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       setError("File size must be less than 10MB.")
@@ -59,6 +57,7 @@ export default function Dashboard() {
           return
         }
 
+        // convert string values to numbers
         const parsedData = results.data.map((row) => ({
           date: row.date,
           product: row.product,
@@ -76,7 +75,7 @@ export default function Dashboard() {
     })
   }
 
-  // Calculate enhanced statistics
+  // calculate totals, averages, and top product
   const calculateStats = () => {
     if (data.length === 0) return null
 
@@ -104,7 +103,7 @@ export default function Dashboard() {
     }
   }
 
-  // Prepare chart data - unified aggregation helper
+  // sum values by product for bar charts
   const aggregateByProduct = (field, defaultValue = 0) => {
     if (data.length === 0) {
       return [
@@ -130,13 +129,15 @@ export default function Dashboard() {
   const getRevenueByProduct = () => aggregateByProduct("revenue", 0)
   const getQuantityByProduct = () => aggregateByProduct("quantity", 0)
 
+  // sort by date for line chart
   const getRevenueOverTime = () => {
-    if (data.length === 0)
+    if (data.length === 0) {
       return [
         { date: "", revenue: 0 },
         { date: "", revenue: 0 },
         { date: "", revenue: 0 },
       ]
+    }
 
     return data
       .map((row) => ({
@@ -146,12 +147,13 @@ export default function Dashboard() {
       .sort((a, b) => new Date(a.date) - new Date(b.date))
   }
 
+  // calculate percentage breakdown for pie chart
   const getRevenueBreakdown = () => {
     if (data.length === 0) return []
 
     const revenueByProduct = getRevenueByProduct()
     const total = revenueByProduct.reduce((sum, item) => sum + item.revenue, 0)
-
+    
     return revenueByProduct.map(({ product, revenue }) => ({
       name: product,
       value: Number.parseFloat(((revenue / total) * 100).toFixed(1)),
@@ -160,9 +162,19 @@ export default function Dashboard() {
 
   const stats = calculateStats()
   const hasData = data.length > 0
-
   const PIE_COLORS = ["#60a5fa", "#34d399", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"]
+  
+  const getTooltipStyle = () => ({
+    contentStyle: {
+      backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+      border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
+      color: darkMode ? "#fff" : "#000",
+    },
+    labelStyle: { color: darkMode ? "#fff" : "#000" },
+    itemStyle: { color: darkMode ? "#fff" : "#000" },
+  })
 
+  // animated ascii background using wave functions
   useEffect(() => {
     const rows = 35
     const cols = 120
@@ -283,15 +295,7 @@ export default function Dashboard() {
                   <XAxis dataKey="product" stroke={darkMode ? "#999" : "#666"} tick={false} />
                 )}
                 <YAxis stroke={darkMode ? "#999" : "#666"} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
-                    border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
-                    color: darkMode ? "#fff" : "#000",
-                  }}
-                  labelStyle={{ color: darkMode ? "#fff" : "#000" }}
-                  itemStyle={{ color: darkMode ? "#fff" : "#000" }}
-                />
+                <Tooltip {...getTooltipStyle()} />
                 <Bar dataKey="revenue" fill={darkMode ? "#60a5fa" : "#3b82f6"} />
               </BarChart>
             </ResponsiveContainer>
@@ -309,15 +313,7 @@ export default function Dashboard() {
                   <XAxis dataKey="product" stroke={darkMode ? "#999" : "#666"} tick={false} />
                 )}
                 <YAxis stroke={darkMode ? "#999" : "#666"} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
-                    border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
-                    color: darkMode ? "#fff" : "#000",
-                  }}
-                  labelStyle={{ color: darkMode ? "#fff" : "#000" }}
-                  itemStyle={{ color: darkMode ? "#fff" : "#000" }}
-                />
+                <Tooltip {...getTooltipStyle()} />
                 <Bar dataKey="quantity" fill={darkMode ? "#34d399" : "#10b981"} />
               </BarChart>
             </ResponsiveContainer>
@@ -342,15 +338,7 @@ export default function Dashboard() {
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: darkMode ? "#1a1a1a" : "#fff",
-                      border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
-                    }}
-                    labelStyle={{ color: darkMode ? "#fff" : "#000" }}
-                    itemStyle={{ color: darkMode ? "#fff" : "#000" }}
-                    formatter={(value, name) => [`${value}%`, name]}
-                  />
+                  <Tooltip {...getTooltipStyle()} formatter={(value, name) => [`${value}%`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -368,15 +356,7 @@ export default function Dashboard() {
                   <XAxis dataKey="date" stroke={darkMode ? "#999" : "#666"} tick={false} />
                 )}
                 <YAxis stroke={darkMode ? "#999" : "#666"} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
-                    border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
-                    color: darkMode ? "#fff" : "#000",
-                  }}
-                  labelStyle={{ color: darkMode ? "#fff" : "#000" }}
-                  itemStyle={{ color: darkMode ? "#fff" : "#000" }}
-                />
+                <Tooltip {...getTooltipStyle()} />
                 <Line
                   type="monotone"
                   dataKey="revenue"
